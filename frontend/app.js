@@ -20,7 +20,7 @@ const initialState = {
     { id: 'sunday', name: 'Sunday table', description: 'Good food, split five ways.', icon: 'food', memberIds: [me, 'ishaan', 'ritika', 'nisha', 'karan'], baseBalance: 0, baseExpenseCount: 3, createdAt: '2026-10-02' },
   ],
   transactions: [
-    { id: 'tx-1', description: 'Lunch at Burma Burma', amount: 1860, type: 'expense', category: 'Dining', groupId: 'goa', date: '2026-10-20', paidBy: me, splitMode: 'equal', splits: [], deleted: false, includeInBalances: false },
+    { id: 'tx-1', description: 'Lunch at Burma Burma', amount: 1860, type: 'expense', category: 'Dining', groupId: 'goa', date: '2026-10-20', paidBy: me, splitMode: 'equal', splits: [{ userId: me, amount: 465, status: 'paid' }, { userId: 'maya', amount: 465, status: 'pending' }, { userId: 'ishaan', amount: 465, status: 'pending' }, { userId: 'nisha', amount: 465, status: 'pending' }], deleted: false, includeInBalances: false },
     { id: 'tx-2', description: 'Electricity bill', amount: 2340, type: 'expense', category: 'Home', groupId: 'flat', date: '2026-10-19', paidBy: me, splitMode: 'equal', splits: [{ userId: me, amount: 780, status: 'paid' }, { userId: 'maya', amount: 780, status: 'pending' }, { userId: 'leela', amount: 780, status: 'pending' }], deleted: false, includeInBalances: false },
     { id: 'tx-3', description: 'Weekly groceries', amount: 1240, type: 'expense', category: 'Groceries', groupId: 'flat', date: '2026-10-18', paidBy: me, splitMode: 'equal', splits: [{ userId: me, amount: 414, status: 'paid' }, { userId: 'maya', amount: 413, status: 'pending' }, { userId: 'leela', amount: 413, status: 'pending' }], deleted: false, includeInBalances: false },
     { id: 'tx-4', description: 'Freelance project', amount: 8500, type: 'income', category: 'Income', groupId: null, date: '2026-10-16', paidBy: me, splitMode: 'equal', splits: [], deleted: false, includeInBalances: false },
@@ -87,6 +87,7 @@ function escapeHtml(value) {
 }
 
 function money(value) { return new Intl.NumberFormat('en-IN', { style: 'currency', currency: state.profile.currency || 'INR', maximumFractionDigits: 0 }).format(Math.round(Number(value) || 0)); }
+function currencySymbol() { return new Intl.NumberFormat('en-IN', { style: 'currency', currency: state.profile.currency || 'INR', maximumFractionDigits: 0 }).formatToParts(0).find((part) => part.type === 'currency')?.value || '₹'; }
 function signedMoney(value) { return `${value < 0 ? '−' : '+'}${money(Math.abs(value))}`; }
 function newId(prefix) { return `${prefix}-${Math.random().toString(36).slice(2, 9)}`; }
 function todayValue() {
@@ -134,8 +135,8 @@ function monthlyTransactions(month = monthKey()) {
   return state.transactions.filter((tx) => !tx.deleted && monthKey(tx.date) === month);
 }
 function getFriend(id) { return state.friends.find((friend) => friend.id === id); }
-function avatarHtml(id, size = '') {
-  const name = personName(id);
+function avatarHtml(id, size = '', nameOverride = '') {
+  const name = nameOverride || personName(id);
   const initials = name.split(/\s+/).slice(0, 2).map((part) => part[0] || '').join('').toUpperCase();
   const tones = ['#eee2db|#805e4f', '#e4e9e0|#586b58', '#eee9d9|#817044', '#e6e7e2|#5f6759', '#eee5d3|#806b48', '#e8e1ea|#6f5f77'];
   const index = Math.max(0, [...String(id)].reduce((total, char) => total + char.charCodeAt(0), 0) % tones.length);
@@ -170,6 +171,19 @@ function setPageHeading(label) {
   });
 }
 
+function syncProfileIdentity() {
+  const name = state.profile.name || 'Aarav Mehta';
+  const initials = name.split(/\s+/).slice(0, 2).map((part) => part[0] || '').join('').toUpperCase();
+  const copy = document.querySelector('.profile-copy strong');
+  if (copy) copy.textContent = name;
+  const button = document.querySelector('.profile-button');
+  if (button) button.setAttribute('aria-label', `Account for ${name}`);
+  document.querySelectorAll('.avatar-you').forEach((avatar) => { avatar.textContent = initials; });
+  const greeting = document.querySelector('#greeting');
+  if (greeting) greeting.innerHTML = `Good morning, ${escapeHtml(name.split(/\s+/)[0])}<span class="heading-period">.</span>`;
+  document.querySelectorAll('.amount-input > span').forEach((symbol) => { symbol.textContent = currencySymbol(); });
+}
+
 function showView(name) {
   currentView = viewNames[name] ? name : 'overview';
   overview.hidden = currentView !== 'overview';
@@ -200,6 +214,7 @@ function renderCurrentView() {
 }
 
 function updateOverview() {
+  syncProfileIdentity();
   document.querySelector('#group-nav-count').textContent = state.groups.length;
   const pending = state.friendRequests.filter((request) => request.direction === 'incoming').length;
   document.querySelector('#friend-nav-dot').style.display = pending ? '' : 'none';
@@ -342,12 +357,18 @@ function renderFriends() {
   const visible = friendTab === 'blocked' ? blocked : accepted;
   const friendRows = visible.map((friend) => {
     const balance = balances[friend.id] || 0;
-    const status = friend.status === 'blocked' ? '<span class="status-chip blocked">Blocked</span>' : balance > 0 ? 'owes you' : balance < 0 ? 'you owe' : 'settled';
-    const amount = friend.status === 'blocked' ? '' : balance ? money(Math.abs(balance)) : '—';
-    const action = friend.status === 'blocked' ? `<button class="mini-action" type="button" data-action="unblock-friend" data-id="${escapeHtml(friend.id)}">Unblock</button>` : `<button class="mini-action" type="button" data-action="open-settlement" data-id="${escapeHtml(friend.id)}">Settle</button><button class="mini-action danger" type="button" data-action="block-friend" data-id="${escapeHtml(friend.id)}">Block</button>`;
-    return `<div class="friend-row">${avatarHtml(friend.id)}<span class="friend-copy"><strong>${escapeHtml(friend.name)}</strong><small>${escapeHtml(friend.contact || 'FinTrack member')}</small></span>${friend.status === 'blocked' ? status : `<span class="friend-balance ${balance < 0 ? 'negative' : ''}"><span>${status}</span><strong>${amount}</strong></span>`}<span class="friend-actions">${action}</span></div>`;
+    const hasBalance = balance !== 0;
+    const balanceStatus = balance > 0 ? 'owes you' : balance < 0 ? 'you owe' : 'settled';
+    const unfriendLabel = hasBalance ? `Settle ${friend.name}'s balance before unfriending` : `Unfriend ${friend.name}`;
+    const unfriendButton = `<button class="mini-action danger" type="button" data-action="unfriend-friend" data-id="${escapeHtml(friend.id)}" aria-label="${escapeHtml(unfriendLabel)}" title="${hasBalance ? 'Settle the outstanding balance before unfriending.' : 'Remove this friend. Past records will remain.'}" ${hasBalance ? 'disabled aria-disabled="true"' : ''}>Unfriend</button>`;
+    const relationshipAction = friend.status === 'blocked'
+      ? `<button class="mini-action" type="button" data-action="unblock-friend" data-id="${escapeHtml(friend.id)}">Unblock</button>`
+      : `<button class="mini-action danger" type="button" data-action="block-friend" data-id="${escapeHtml(friend.id)}">Block</button>`;
+    const actions = `<button class="mini-action" type="button" data-action="open-settlement" data-id="${escapeHtml(friend.id)}">Settle</button>${relationshipAction}${unfriendButton}`;
+    const status = friend.status === 'blocked' ? '<span class="status-chip blocked">Blocked</span>' : '';
+    return `<div class="friend-row">${avatarHtml(friend.id)}<span class="friend-copy"><strong>${escapeHtml(friend.name)}</strong><small>${escapeHtml(friend.contact || 'FinTrack member')}</small></span>${status}<span class="friend-balance ${balance < 0 ? 'negative' : ''}"><span>${balanceStatus}</span><strong>${hasBalance ? money(Math.abs(balance)) : '—'}</strong></span><span class="friend-actions">${actions}</span></div>`;
   }).join('') || `<div class="empty-state"><strong>${friendTab === 'blocked' ? 'No blocked friends' : 'No friends yet'}</strong>${friendTab === 'blocked' ? 'Blocked users will appear here.' : 'Add a friend to start keeping shared balances.'}</div>`;
-  const requests = [...incoming.map((request) => `<div class="request-card">${avatarHtml(request.id)}<span class="request-copy"><strong>${escapeHtml(request.name)}</strong><small>${escapeHtml(request.contact)} <i>·</i> sent you a request</small></span><span class="request-actions"><button class="button button-secondary" type="button" data-action="decline-request" data-id="${escapeHtml(request.id)}">Decline</button><button class="button button-primary" type="button" data-action="accept-request" data-id="${escapeHtml(request.id)}">Accept</button></span></div>`), outgoing.map((friend) => `<div class="request-card">${avatarHtml(friend.id)}<span class="request-copy"><strong>${escapeHtml(friend.name)}</strong><small>${escapeHtml(friend.contact)} <i>·</i> invite sent</small></span><span class="status-chip pending">Waiting for response</span></div>`)].join('');
+  const requests = [...incoming.map((request) => `<div class="request-card">${avatarHtml(request.id, '', request.name)}<span class="request-copy"><strong>${escapeHtml(request.name)}</strong><small>${escapeHtml(request.contact)} <i>·</i> sent you a request</small></span><span class="request-actions"><button class="button button-secondary" type="button" data-action="decline-request" data-id="${escapeHtml(request.id)}">Decline</button><button class="button button-primary" type="button" data-action="accept-request" data-id="${escapeHtml(request.id)}">Accept</button></span></div>`), outgoing.map((friend) => `<div class="request-card">${avatarHtml(friend.id)}<span class="request-copy"><strong>${escapeHtml(friend.name)}</strong><small>${escapeHtml(friend.contact)} <i>·</i> invite sent</small></span><span class="status-chip pending">Waiting for response</span></div>`)].join('');
   const history = state.settlements.slice().sort((a, b) => b.date.localeCompare(a.date)).map((item) => `<div class="history-row"><strong>${escapeHtml(item.person)}</strong><span>${item.direction === 'received' ? 'They paid you' : 'You paid them'}</span><span>${escapeHtml(dateLabel(item.date))} <i>·</i> ${escapeHtml(item.method)}</span><strong>${money(item.amount)}</strong></div>`).join('') || '<div class="empty-state">Settlements you record will be listed here.</div>';
   const tabCount = friendTab === 'blocked' ? blocked.length : accepted.length;
   return `${viewHeading('YOUR CIRCLE', 'Friends', 'Requests, relationships, and balances stay easy to follow.', actionButton('add-friend', '<span aria-hidden="true">+</span> Add a friend', true))}
@@ -492,7 +513,7 @@ function openSettlementDialog(friendId = null, groupId = '') {
   const form = document.querySelector('#settlement-form');
   form.reset();
   const balances = currentFriendBalances();
-  const people = state.friends.filter((friend) => friend.status === 'accepted');
+  const people = state.friends.filter((friend) => friend.status === 'accepted' || friend.status === 'blocked');
   const personSelect = document.querySelector('#settlement-person');
   personSelect.innerHTML = people.map((friend) => `<option value="${escapeHtml(friend.id)}">${escapeHtml(friend.name)}</option>`).join('');
   if (friendId && getFriend(friendId)) personSelect.value = friendId;
@@ -595,7 +616,7 @@ function addFriend(event) {
   if (!form.reportValidity()) return;
   const data = new FormData(form);
   const contact = String(data.get('contact')).trim();
-  if (state.friends.some((friend) => friend.contact?.toLowerCase() === contact.toLowerCase())) { showToast('That person is already in your friend list.'); return; }
+  if (state.friends.some((friend) => friend.status !== 'removed' && friend.contact?.toLowerCase() === contact.toLowerCase())) { showToast('That person is already in your friend list.'); return; }
   const id = newId('friend');
   state.friends.push({ id, name: String(data.get('name')).trim(), contact, status: 'pending' });
   state.baseFriendBalances[id] = 0;
@@ -729,6 +750,18 @@ function handleAction(action, element) {
     friend.status = action === 'block-friend' ? 'blocked' : 'accepted';
     saveState(); renderCurrentView(); showToast(action === 'block-friend' ? `${friend.name} was blocked.` : `${friend.name} was unblocked.`);
   }
+  if (action === 'unfriend-friend') {
+    const friend = getFriend(id);
+    if (!friend || !['accepted', 'blocked'].includes(friend.status)) return;
+    const balance = currentFriendBalances()[friend.id] || 0;
+    if (balance !== 0) { showToast('Settle this friend’s outstanding balance before unfriending.'); return; }
+    if (!window.confirm(`Unfriend ${friend.name}? Past transaction and settlement records will remain, and they will be removed from active group splits.`)) return;
+    friend.status = 'removed';
+    state.groups.forEach((group) => { group.memberIds = group.memberIds.filter((memberId) => memberId !== friend.id); });
+    saveState();
+    refreshAfterChange();
+    showToast(`${friend.name} was removed from your friends.`);
+  }
   if (action === 'toggle-provider') {
     const provider = element.dataset.provider;
     state.providers[provider] = !state.providers[provider];
@@ -736,7 +769,7 @@ function handleAction(action, element) {
     showToast(`${provider} ${state.providers[provider] ? 'connected in this demo' : 'disconnected'}.`);
   }
   if (action === 'delete-category') {
-    const used = state.transactions.some((tx) => tx.category === id && !tx.deleted);
+    const used = state.transactions.some((tx) => tx.category === id);
     if (used) { showToast('This category is used by a transaction and cannot be removed yet.'); return; }
     state.categories = state.categories.filter((category) => category !== id);
     saveState(); renderCurrentView(); showToast(`${id} category removed.`);
