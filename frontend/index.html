@@ -282,10 +282,11 @@
     <dialog class="modal" id="friend-modal" aria-labelledby="friend-title">
       <form class="modal-card" id="friend-form" method="dialog">
         <div class="modal-heading"><div><p class="eyebrow">KEEP YOUR CIRCLE IN SYNC</p><h2 id="friend-title">Add a friend</h2></div><button class="icon-button modal-close" type="button" aria-label="Close dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
-        <p class="modal-copy">Invite a registered FinTrack user by email.</p>
-        <label class="field-label" for="friend-name">Their name</label><input class="text-field" id="friend-name" name="name" placeholder="Full name" required maxlength="50" />
-        <label class="field-label" for="friend-contact">Registered FinTrack email</label><input class="text-field" id="friend-contact" name="contact" type="email" autocomplete="off" placeholder="name@example.com" required />
-        <div class="modal-actions"><button class="button button-quiet modal-cancel" type="button">Cancel</button><button class="button button-primary" type="submit">Send invite</button></div>
+        <p class="modal-copy">Search for a registered FinTrack user with their email address.</p>
+        <label class="field-label" for="friend-contact">Email address</label>
+        <div class="friend-search-row"><input class="text-field" id="friend-contact" name="contact" type="email" autocomplete="email" placeholder="name@example.com" required /><button class="button button-secondary" id="friend-search-button" type="button">Search</button></div>
+        <div class="friend-search-result" id="friend-search-result" role="status" aria-live="polite" hidden></div>
+        <div class="modal-actions"><button class="button button-quiet modal-cancel" type="button">Cancel</button><button class="button button-primary" id="friend-send-button" type="button" disabled hidden>Send request</button></div>
       </form>
     </dialog>
 

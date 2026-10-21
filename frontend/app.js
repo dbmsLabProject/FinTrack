@@ -613,18 +613,40 @@ async function createGroup(event) {
   state.groups.unshift(group); selectedGroupId = group.id; saveState(); closeDialog(groupDialog); showView('groups'); showToast(`${group.name} was saved to Supabase.`);
 }
 
-async function addFriend(event) {
-  event.preventDefault(); const form = document.querySelector('#friend-form'); if (!form.reportValidity()) return;
-  const data = new FormData(form); const contact = String(data.get('contact')).trim();
-  if (state.friends.some((friend) => friend.status !== 'removed' && friend.contact?.toLowerCase() === contact.toLowerCase())) { showToast('That person is already in your friend list.'); return; }
-  const { data: rows, error } = await window.fintrackSupabase.rpc('request_fintrack_friend', { p_email: contact });
-  if (error) { showToast(`Could not send friend request: ${error.message}`); return; }
-  const target = Array.isArray(rows) ? rows[0] : rows; if (!target) { showToast('No FinTrack account found for that email.'); return; }
-  state.friends.push({ id: target.other_user_id, name: target.full_name || String(data.get('name')).trim(), contact: target.email_id || contact, status: 'pending' });
-  state.friendRequests.push({ id: target.other_user_id, name: target.full_name || contact, contact, direction: 'outgoing', createdAt: todayValue() });
-  saveState(); closeDialog(friendDialog); form.reset(); refreshAfterChange(); showToast('Friend request sent through Supabase.');
+let friendSearchMatch = null;
+function clearFriendSearch() {
+  friendSearchMatch = null;
+  const result = document.querySelector('#friend-search-result');
+  const sendButton = document.querySelector('#friend-send-button');
+  result.hidden = true; result.textContent = ''; sendButton.hidden = true; sendButton.disabled = true;
 }
-
+async function searchFriendByEmail() {
+  const input = document.querySelector('#friend-contact'); const button = document.querySelector('#friend-search-button'); const result = document.querySelector('#friend-search-result');
+  if (!input.reportValidity()) return;
+  const contact = input.value.trim(); clearFriendSearch(); result.hidden = false; result.textContent = 'Searching…'; button.disabled = true;
+  try {
+    const { data, error } = await window.fintrackSupabase.rpc('find_fintrack_user_by_email', { p_email: contact });
+    if (error) throw error;
+    const target = Array.isArray(data) ? data[0] : data;
+    if (!target) { result.textContent = 'No FinTrack account was found for that email.'; return; }
+    if (state.friends.some((friend) => friend.status !== 'removed' && friend.id === target.other_user_id)) { result.textContent = 'This person is already in your friend list or you have a pending request.'; return; }
+    friendSearchMatch = { id: target.other_user_id, name: target.full_name || contact, contact };
+    result.innerHTML = `<strong>${escapeHtml(friendSearchMatch.name)}</strong><span>${escapeHtml(contact)}</span>`;
+    document.querySelector('#friend-send-button').hidden = false; document.querySelector('#friend-send-button').disabled = false;
+  } catch (error) { result.textContent = `Could not search for that account: ${error.message}`; }
+  finally { button.disabled = false; }
+}
+async function addFriend() {
+  if (!friendSearchMatch) return;
+  const sendButton = document.querySelector('#friend-send-button'); sendButton.disabled = true;
+  const { data: rows, error } = await window.fintrackSupabase.rpc('request_fintrack_friend', { p_email: friendSearchMatch.contact });
+  if (error) { showToast(`Could not send friend request: ${error.message}`); sendButton.disabled = false; return; }
+  const target = Array.isArray(rows) ? rows[0] : rows;
+  if (!target) { showToast('No FinTrack account found for that email.'); sendButton.disabled = false; return; }
+  state.friends.push({ id: target.other_user_id, name: target.full_name || friendSearchMatch.name, contact: target.email_id || friendSearchMatch.contact, status: 'pending' });
+  state.friendRequests.push({ id: target.other_user_id, name: target.full_name || friendSearchMatch.name, contact: friendSearchMatch.contact, direction: 'outgoing', createdAt: todayValue() });
+  saveState(); closeDialog(friendDialog); document.querySelector('#friend-form').reset(); clearFriendSearch(); refreshAfterChange(); showToast('Friend request sent through Supabase.');
+}
 async function recordSettlement(event) {
   event.preventDefault();
   const form = document.querySelector('#settlement-form');
@@ -752,7 +774,7 @@ function handleAction(action, element) {
   const id = element.dataset.id;
   if (action === 'add-transaction') openTransactionDialog();
   if (action === 'create-group') openGroupDialog();
-  if (action === 'add-friend') { document.querySelector('#friend-form').reset(); openDialog(friendDialog); document.querySelector('#friend-name').focus(); }
+  if (action === 'add-friend') { document.querySelector('#friend-form').reset(); clearFriendSearch(); openDialog(friendDialog); document.querySelector('#friend-contact').focus(); }
   if (action === 'open-settlement') openSettlementDialog(id || null, element.dataset.groupId || '');
   if (action === 'select-group') { selectedGroupId = id; renderCurrentView(); }
   if (action === 'add-group-expense') openTransactionDialog({ groupId: element.dataset.groupId || selectedGroupId });
@@ -824,7 +846,10 @@ document.querySelector('#global-notifications').addEventListener('click', () => 
 transactionForm.addEventListener('submit', submitTransaction);
 document.querySelector('#settlement-form').addEventListener('submit', recordSettlement);
 document.querySelector('#group-form').addEventListener('submit', createGroup);
-document.querySelector('#friend-form').addEventListener('submit', addFriend);
+document.querySelector('#friend-form').addEventListener('submit', (event) => { event.preventDefault(); void searchFriendByEmail(); });
+document.querySelector('#friend-search-button').addEventListener('click', () => void searchFriendByEmail());
+document.querySelector('#friend-send-button').addEventListener('click', () => void addFriend());
+document.querySelector('#friend-contact').addEventListener('input', clearFriendSearch);
 document.querySelector('#member-form').addEventListener('submit', async (event) => {
   event.preventDefault();
   const form = event.currentTarget; const group = getGroup(form.dataset.groupId);
