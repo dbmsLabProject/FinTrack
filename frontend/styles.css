@@ -575,3 +575,18 @@ h2 { margin: 0; font-size: 15px; font-weight: 600; letter-spacing: -.25px; }
   .split-member-row .text-field { width: 84px; }
   .modal { max-height: calc(100dvh - 24px); overflow-y: auto; }
 }
+
+/* Supabase account gate */
+.app-shell[hidden], #auth-gate[hidden] { display: none !important; }
+#auth-gate { min-height: 100vh; display: grid; place-items: center; padding: 24px; background: #f5f4ef; color: #22231f; font-family: inherit; }
+.auth-card { width: min(100%, 430px); padding: 36px; border: 1px solid #e5e2d9; border-radius: 22px; background: #fff; box-shadow: 0 18px 54px #29281b12; }
+.auth-card .brand-name { display: inline-block; margin-bottom: 34px; font-size: 25px; font-weight: 700; }
+.auth-card h1 { margin: 8px 0; font-size: 30px; }
+.auth-copy { margin: 0 0 24px; color: #74756f; }
+.auth-card form { display: grid; gap: 10px; }
+.auth-card [hidden] { display: none !important; }
+.auth-card .field-label { margin-top: 8px; }
+.auth-card .auth-submit { width: 100%; margin-top: 12px; }
+.auth-switch { display: block; margin: 18px auto 0; border: 0; background: none; color: #4d6751; text-decoration: underline; cursor: pointer; }
+.auth-error { min-height: 20px; margin: 3px 0; color: #a13232; font-size: 13px; }
+#auth-gate .auth-card [hidden] { display: none !important; }
