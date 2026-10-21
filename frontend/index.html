@@ -237,12 +237,10 @@
           <div><label class="field-label" for="transaction-amount">Amount</label><div class="amount-input"><span>₹</span><input class="text-field" id="transaction-amount" name="amount" type="number" min="1" step="1" placeholder="0" required /></div></div>
           <div><label class="field-label" for="transaction-type">Type</label><select class="text-field" id="transaction-type" name="type"><option value="expense">Expense</option><option value="income">Income</option></select></div>
         </div>
+        <label class="field-label" for="transaction-comment">Comment <span class="optional-label">OPTIONAL</span></label>
+        <textarea class="text-field text-area" id="transaction-comment" name="comment" maxlength="250" placeholder="Add a note about this transaction"></textarea>
         <div class="form-row">
-          <div><label class="field-label" for="transaction-category">Category</label><select class="text-field" id="transaction-category" name="category"><option>Dining</option><option>Home</option><option>Groceries</option><option>Travel</option><option>Transport</option><option>Income</option><option>Other</option></select></div>
-          <div><label class="field-label" for="transaction-group">Group</label><select class="text-field" id="transaction-group" name="group"><option value="Personal">Personal</option><option>Goa, someday</option><option>Flat 402</option><option>Sunday table</option></select></div>
-        </div>
-        <div class="form-row">
-          <div><label class="field-label" for="transaction-date">Date</label><input class="text-field" id="transaction-date" name="date" type="date" required /></div>
+          <div><label class="field-label" for="transaction-group">Group</label><select class="text-field" id="transaction-group" name="group"><option value="">Personal</option></select></div>
           <div><label class="field-label" for="transaction-paid-by">Paid by</label><select class="text-field" id="transaction-paid-by" name="paidBy"></select></div>
         </div>
         <div class="split-editor" id="split-editor" hidden></div>
