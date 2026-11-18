@@ -24,6 +24,7 @@ The project was developed as part of a Database Management Systems (DBMS) course
 - **Hosting:** GitHub Pages.
 
 ## Architecture
+```mermaid
 flowchart LR
     Browser["User's Browser"]
     Pages["GitHub Pages<br/>Frontend (HTML, CSS, JS)"]
@@ -33,6 +34,7 @@ flowchart LR
     Browser -->|Loads frontend| Pages
     Browser -->|Authenticated requests| Supabase
     Supabase -->|Reads and writes data| DB
+```
 
 ## Database
 
