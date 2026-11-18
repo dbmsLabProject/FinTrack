@@ -1,53 +1,20 @@
-const storageKey = 'fintrack-demo-workspace-v2';
+try { localStorage.removeItem('fintrack-demo-workspace-v2'); } catch {}
+
 let me = 'u0';
 let categoryIdsByName = new Map();
 const initialState = {
-  profile: { name: 'Aarav Mehta', email: 'aarav.mehta@example.com', mobile: '+91 98765 43210', currency: 'INR' },
-  providers: { Google: true, 'Email and password': true, 'Mobile number': false },
-  categories: ['Dining', 'Home', 'Groceries', 'Travel', 'Transport', 'Income', 'Other'],
-  baseFriendBalances: { maya: 1250, ishaan: 940, nisha: 1660, leela: -620, karan: -620, ritika: 0 },
-  friends: [
-    { id: 'maya', name: 'Maya Shah', contact: 'maya.shah@example.com', status: 'accepted' },
-    { id: 'ishaan', name: 'Ishaan Kapoor', contact: 'ishaan.kapoor@example.com', status: 'accepted' },
-    { id: 'nisha', name: 'Nisha Rao', contact: 'nisha.rao@example.com', status: 'accepted' },
-    { id: 'leela', name: 'Leela Patel', contact: 'leela.patel@example.com', status: 'accepted' },
-    { id: 'karan', name: 'Karan Sethi', contact: 'karan.sethi@example.com', status: 'accepted' },
-    { id: 'ritika', name: 'Ritika Das', contact: 'ritika.das@example.com', status: 'accepted' },
-  ],
-  friendRequests: [{ id: 'request-aditi', name: 'Aditi Shah', contact: 'aditi.shah@example.com', direction: 'incoming', createdAt: '2026-10-20' }],
-  groups: [
-    { id: 'goa', name: 'Goa, someday', description: 'A little trip fund for when the time is right.', icon: 'travel', memberIds: [me, 'maya', 'ishaan', 'nisha'], baseBalance: 2400, baseExpenseCount: 8, createdAt: '2026-09-14' },
-    { id: 'flat', name: 'Flat 402', description: 'Home costs, shared fairly.', icon: 'home', memberIds: [me, 'maya', 'leela'], baseBalance: -780, baseExpenseCount: 12, createdAt: '2026-08-28' },
-    { id: 'sunday', name: 'Sunday table', description: 'Good food, split five ways.', icon: 'food', memberIds: [me, 'ishaan', 'ritika', 'nisha', 'karan'], baseBalance: 0, baseExpenseCount: 3, createdAt: '2026-10-02' },
-  ],
-  transactions: [
-    { id: 'tx-1', description: 'Lunch at Burma Burma', amount: 1860, type: 'expense', category: 'Dining', groupId: 'goa', date: '2026-10-20', paidBy: me, splitMode: 'equal', splits: [{ userId: me, amount: 465, status: 'paid' }, { userId: 'maya', amount: 465, status: 'pending' }, { userId: 'ishaan', amount: 465, status: 'pending' }, { userId: 'nisha', amount: 465, status: 'pending' }], deleted: false, includeInBalances: false },
-    { id: 'tx-2', description: 'Electricity bill', amount: 2340, type: 'expense', category: 'Home', groupId: 'flat', date: '2026-10-19', paidBy: me, splitMode: 'equal', splits: [{ userId: me, amount: 780, status: 'paid' }, { userId: 'maya', amount: 780, status: 'pending' }, { userId: 'leela', amount: 780, status: 'pending' }], deleted: false, includeInBalances: false },
-    { id: 'tx-3', description: 'Weekly groceries', amount: 1240, type: 'expense', category: 'Groceries', groupId: 'flat', date: '2026-10-18', paidBy: me, splitMode: 'equal', splits: [{ userId: me, amount: 414, status: 'paid' }, { userId: 'maya', amount: 413, status: 'pending' }, { userId: 'leela', amount: 413, status: 'pending' }], deleted: false, includeInBalances: false },
-    { id: 'tx-4', description: 'Freelance project', amount: 8500, type: 'income', category: 'Income', groupId: null, date: '2026-10-16', paidBy: me, splitMode: 'equal', splits: [], deleted: false, includeInBalances: false },
-    { id: 'tx-5', description: 'Monthly rent', amount: 8500, type: 'expense', category: 'Home', groupId: null, date: '2026-10-15', paidBy: me, splitMode: 'equal', splits: [], deleted: false, includeInBalances: false },
-    { id: 'tx-6', description: 'Metro pass', amount: 680, type: 'expense', category: 'Transport', groupId: null, date: '2026-10-14', paidBy: me, splitMode: 'equal', splits: [], deleted: false, includeInBalances: false },
-    { id: 'tx-7', description: 'Coffee and a catch-up', amount: 380, type: 'expense', category: 'Dining', groupId: null, date: '2026-10-12', paidBy: me, splitMode: 'equal', splits: [], deleted: false, includeInBalances: false },
-    { id: 'tx-8', description: 'Grocery run', amount: 3420, type: 'expense', category: 'Groceries', groupId: null, date: '2026-10-10', paidBy: me, splitMode: 'equal', splits: [], deleted: false, includeInBalances: false },
-    { id: 'tx-9', description: 'Monthly stipend', amount: 20000, type: 'income', category: 'Income', groupId: null, date: '2026-10-05', paidBy: me, splitMode: 'equal', splits: [], deleted: false, includeInBalances: false },
-    { id: 'tx-10', description: 'Campus research support', amount: 20000, type: 'income', category: 'Income', groupId: null, date: '2026-10-01', paidBy: me, splitMode: 'equal', splits: [], deleted: false, includeInBalances: false },
-  ],
-  settlements: [{ id: 'settlement-old', personId: 'maya', person: 'Maya Shah', direction: 'received', amount: 500, method: 'UPI', groupId: 'flat', date: '2026-10-11', includeInBalances: false }],
+  profile: { name: '', email: '', mobile: '', currency: 'INR' },
+  providers: {},
+  categories: [],
+  baseFriendBalances: {},
+  friends: [],
+  friendRequests: [],
+  groups: [],
+  transactions: [],
+  settlements: [],
 };
 
-function loadState() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(storageKey));
-    if (saved && saved.profile && Array.isArray(saved.transactions) && Array.isArray(saved.groups)) {
-      return { ...structuredClone(initialState), ...saved };
-    }
-  } catch (error) {
-    console.info('Using the demo workspace defaults.', error);
-  }
-  return structuredClone(initialState);
-}
-
-let state = loadState();
+let state = structuredClone(initialState);
 let currentView = 'overview';
 let transactionFilter = 'all';
 let transactionSearch = '';
@@ -58,6 +25,7 @@ let selectedGroupId = state.groups[0]?.id || null;
 let editingTransactionId = null;
 let editingSplitSeed = null;
 let toastTimer = null;
+const pendingSplitPayments = new Set();
 
 const viewNames = { overview: 'Overview', transactions: 'Transactions', groups: 'Split groups', friends: 'Friends', insights: 'Insights', settings: 'Settings' };
 const viewOutlet = document.querySelector('#view-page');
@@ -72,8 +40,22 @@ const detailDialog = document.querySelector('#transaction-detail-modal');
 const transactionForm = document.querySelector('#transaction-form');
 
 function saveState() {
-  try { localStorage.setItem(storageKey, JSON.stringify(state)); }
-  catch { showToast('This browser could not save the demo changes.'); }
+  // Supabase writes are authoritative; do not cache private account data in localStorage.
+}
+
+async function submitFormOnce(form, operation) {
+  if (form.dataset.submitting === 'true') return;
+  form.dataset.submitting = 'true';
+  const buttons = [...form.querySelectorAll('button[type="submit"]')];
+  buttons.forEach((button) => { button.dataset.wasDisabled = String(button.disabled); button.disabled = true; });
+  try {
+    await operation();
+  } catch (error) {
+    showToast(`Request failed: ${error?.message || 'Please try again.'}`);
+  } finally {
+    delete form.dataset.submitting;
+    buttons.forEach((button) => { button.disabled = button.dataset.wasDisabled === 'true'; delete button.dataset.wasDisabled; });
+  }
 }
 
 function showToast(message) {
@@ -87,7 +69,7 @@ function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
 }
 
-function money(value) { return new Intl.NumberFormat('en-IN', { style: 'currency', currency: state.profile.currency || 'INR', maximumFractionDigits: 0 }).format(Math.round(Number(value) || 0)); }
+function money(value) { return window.FinTrackFinance.formatCurrency(value, state.profile.currency || 'INR'); }
 function currencySymbol() { return new Intl.NumberFormat('en-IN', { style: 'currency', currency: state.profile.currency || 'INR', maximumFractionDigits: 0 }).formatToParts(0).find((part) => part.type === 'currency')?.value || '₹'; }
 function signedMoney(value) { return `${value < 0 ? '−' : '+'}${money(Math.abs(value))}`; }
 function newId(prefix) { return `${prefix}-${Math.random().toString(36).slice(2, 9)}`; }
@@ -101,36 +83,17 @@ function dateLabel(value, options = { month: 'short', day: 'numeric' }) {
   return Number.isNaN(date.valueOf()) ? value : new Intl.DateTimeFormat('en-IN', options).format(date);
 }
 function monthKey(value = todayValue()) { return String(value).slice(0, 7); }
+function currentMonthLabel() { return new Intl.DateTimeFormat('en-IN', { month: 'long', year: 'numeric' }).format(new Date()); }
 function personName(id) { return id === me ? state.profile.name : state.friends.find((friend) => friend.id === id)?.name || 'Former member'; }
 function getGroup(id) { return state.groups.find((group) => group.id === id); }
 function groupName(id) { return id ? getGroup(id)?.name || 'Former group' : 'Personal'; }
 function currentFriendBalances() {
-  const balances = { ...state.baseFriendBalances };
-  state.friends.forEach((friend) => { if (!(friend.id in balances)) balances[friend.id] = 0; });
-  state.transactions.filter((tx) => !tx.deleted && tx.includeInBalances && tx.groupId && tx.type === 'expense').forEach((tx) => {
-    const myShare = tx.splits.find((share) => share.userId === me)?.amount || 0;
-    if (tx.paidBy === me) {
-      tx.splits.filter((share) => share.userId !== me).forEach((share) => { balances[share.userId] = (balances[share.userId] || 0) + share.amount; });
-    } else if (tx.splits.some((share) => share.userId === me)) {
-      balances[tx.paidBy] = (balances[tx.paidBy] || 0) - myShare;
-    }
-  });
-  state.settlements.filter((item) => item.includeInBalances).forEach((item) => {
-    const amount = item.direction === 'received' ? -item.amount : item.amount;
-    balances[item.personId] = (balances[item.personId] || 0) + amount;
-  });
-  return balances;
+  state.friends.forEach((friend) => { if (!(friend.id in state.baseFriendBalances)) state.baseFriendBalances[friend.id] = 0; });
+  return window.FinTrackFinance.calculateLedger({ userId: me, transactions: state.transactions, settlements: state.settlements, baseFriendBalances: state.baseFriendBalances }).friendBalances;
 }
 function groupBalance(group) {
-  let value = Number(group.baseBalance) || 0;
-  state.transactions.filter((tx) => !tx.deleted && tx.includeInBalances && tx.groupId === group.id && tx.type === 'expense').forEach((tx) => {
-    const myShare = tx.splits.find((share) => share.userId === me)?.amount || 0;
-    value += tx.paidBy === me ? tx.amount - myShare : -myShare;
-  });
-  state.settlements.filter((item) => item.includeInBalances && item.groupId === group.id).forEach((item) => {
-    value += item.direction === 'received' ? -item.amount : item.amount;
-  });
-  return value;
+  const baseGroupBalances = Object.fromEntries(state.groups.map((item) => [item.id, item.baseBalance ?? 0]));
+  return window.FinTrackFinance.calculateLedger({ userId: me, transactions: state.transactions, settlements: state.settlements, baseFriendBalances: state.baseFriendBalances, baseGroupBalances }).groupBalances[group.id] || 0;
 }
 function monthlyTransactions(month = monthKey()) {
   return state.transactions.filter((tx) => !tx.deleted && monthKey(tx.date) === month);
@@ -173,7 +136,7 @@ function setPageHeading(label) {
 }
 
 function syncProfileIdentity() {
-  const name = state.profile.name || 'Aarav Mehta';
+  const name = state.profile.name || 'Your account';
   const initials = name.split(/\s+/).slice(0, 2).map((part) => part[0] || '').join('').toUpperCase();
   const copy = document.querySelector('.profile-copy strong');
   if (copy) copy.textContent = name;
@@ -181,7 +144,7 @@ function syncProfileIdentity() {
   if (button) button.setAttribute('aria-label', `Account for ${name}`);
   document.querySelectorAll('.avatar-you').forEach((avatar) => { avatar.textContent = initials; });
   const greeting = document.querySelector('#greeting');
-  if (greeting) greeting.innerHTML = `Good morning, ${escapeHtml(name.split(/\s+/)[0])}<span class="heading-period">.</span>`;
+  if (greeting) greeting.innerHTML = `Good morning, ${escapeHtml(state.profile.name ? name.split(/\s+/)[0] : 'there')}<span class="heading-period">.</span>`;
   document.querySelectorAll('.amount-input > span').forEach((symbol) => { symbol.textContent = currencySymbol(); });
 }
 
@@ -225,16 +188,25 @@ function updateOverview() {
   const month = monthlyTransactions();
   const spend = month.filter((tx) => tx.type === 'expense').reduce((sum, tx) => sum + tx.amount, 0);
   const income = month.filter((tx) => tx.type === 'income').reduce((sum, tx) => sum + tx.amount, 0);
-  document.querySelector('#monthly-spend').innerHTML = `${money(spend)}<span class="amount-decimal">.00</span>`;
+  document.querySelector('#today-label').textContent = new Intl.DateTimeFormat('en-IN', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }).format(new Date()).toUpperCase();
+  const monthLabel = currentMonthLabel();
+  const periodButton = document.querySelector('.spending-panel .select-button');
+  periodButton.textContent = monthLabel;
+  periodButton.setAttribute('aria-label', `Selected period: ${monthLabel}`);
+  document.querySelector('#monthly-spend').textContent = money(spend);
   const summaryCards = document.querySelectorAll('.summary-card');
-  summaryCards[1].querySelector('.summary-value').innerHTML = `${money(owe)}<span class="amount-decimal">.00</span>`;
+  summaryCards[1].querySelector('.summary-value').textContent = money(owe);
   summaryCards[1].querySelector('.summary-foot').innerHTML = `<span>Across ${Object.values(balances).filter((balance) => balance < 0).length} open balances</span>`;
-  summaryCards[2].querySelector('.summary-value').innerHTML = `${money(owed)}<span class="amount-decimal">.00</span>`;
+  summaryCards[2].querySelector('.summary-value').textContent = money(owed);
   summaryCards[2].querySelector('.summary-foot').innerHTML = `<span>From ${Object.values(balances).filter((balance) => balance > 0).length} friends`;
-  summaryCards[3].querySelector('.summary-value').innerHTML = `${money(income)}<span class="amount-decimal">.00</span>`;
+  summaryCards[3].querySelector('.summary-value').textContent = money(income);
   summaryCards[3].querySelector('.summary-foot').innerHTML = `<span>${month.filter((tx) => tx.type === 'income').length} income records</span>`;
   const chartTotal = document.querySelector('.chart-total strong');
-  if (chartTotal) chartTotal.textContent = money(income - spend);
+  if (chartTotal) {
+    chartTotal.textContent = money(Math.abs(income - spend));
+    chartTotal.parentElement.firstChild.textContent = income >= spend ? 'Income is ahead by ' : 'Expenses are ahead by ';
+  }
+  renderOverviewChart(month);
 
   const groupList = document.querySelector('.group-list');
   if (groupList) groupList.innerHTML = state.groups.slice(0, 3).map((group) => {
@@ -247,6 +219,27 @@ function updateOverview() {
   if (groupCount) groupCount.textContent = String(state.groups.length).padStart(2, '0');
   renderDashboardTransactions();
   renderDashboardSettlements(balances);
+}
+
+function renderOverviewChart(monthTransactions) {
+  const chart = document.querySelector('.spending-chart');
+  const lastDay = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
+  const thresholds = [1, 7, 14, 21, lastDay];
+  const xPositions = [0, 155, 310, 465, 620];
+  const totalsByType = (type) => thresholds.map((day) => monthTransactions
+    .filter((tx) => tx.type === type && Number(tx.date.slice(8, 10)) <= day)
+    .reduce((sum, tx) => sum + window.FinTrackFinance.assertAmount(tx.amount, 'Transaction amount'), 0));
+  const income = totalsByType('income');
+  const expenses = totalsByType('expense');
+  const maximum = Math.max(1, ...income, ...expenses);
+  const y = (value) => 162 - (value / maximum) * 140;
+  const pathFor = (values) => values.map((value, index) => `${index ? 'L' : 'M'}${xPositions[index]} ${y(value).toFixed(2)}`).join(' ');
+  const incomePath = pathFor(income);
+  const expensePath = pathFor(expenses);
+  const expenseArea = `${expensePath} L620 162 L0 162 Z`;
+  chart.innerHTML = `<title id="chart-title">Income and expenses for ${escapeHtml(new Intl.DateTimeFormat('en-IN', { month: 'long', year: 'numeric' }).format(new Date()))}</title><desc id="chart-desc">Cumulative income and expense totals from saved transactions.</desc><defs><linearGradient id="expense-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#87917c" stop-opacity=".20"/><stop offset="1" stop-color="#87917c" stop-opacity="0"/></linearGradient></defs><path class="chart-gridline" d="M0 15H620M0 64H620M0 113H620M0 162H620"/><path class="chart-area" d="${expenseArea}"/><path class="chart-line chart-line-income" d="${incomePath}"/><path class="chart-line chart-line-expense" d="${expensePath}"/><circle class="chart-marker marker-income" cx="620" cy="${y(income[4]).toFixed(2)}" r="4"/><circle class="chart-marker marker-expense" cx="620" cy="${y(expenses[4]).toFixed(2)}" r="4"/>`;
+  document.querySelector('.chart-x-labels').innerHTML = thresholds.map((day) => `<span>${escapeHtml(new Intl.DateTimeFormat('en-IN', { month: 'short' }).format(new Date()))} ${day}</span>`).join('');
+  document.querySelector('.chart-y-labels').innerHTML = [1, .75, .5, .25].map((ratio) => `<span>${money(maximum * ratio)}</span>`).join('');
 }
 
 function renderDashboardTransactions() {
@@ -296,13 +289,14 @@ function renderTransactions() {
   const month = active.filter((tx) => transactionPeriod === 'all' || monthKey(tx.date) === monthKey());
   const visible = month.filter((tx) => transactionFilter === 'all' || transactionFilter === 'archived' || tx.type === transactionFilter);
   const categories = [...new Set(state.categories)];
+  const monthLabel = currentMonthLabel();
   return `${viewHeading('YOUR RECORDS', 'Transactions', 'Every income, expense, and shared split, kept together.', actionButton('add-transaction', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Add transaction', true))}
-    <div class="view-stat-grid">${statCard('October spending', money(monthlyTransactions().filter((tx) => tx.type === 'expense').reduce((sum, tx) => sum + tx.amount, 0)), 'Personal and group expenses')}${statCard('October income', money(monthlyTransactions().filter((tx) => tx.type === 'income').reduce((sum, tx) => sum + tx.amount, 0)), 'Income records this month')}${statCard('Open split shares', String(state.transactions.filter((tx) => !tx.deleted).reduce((sum, tx) => sum + tx.splits.filter((share) => share.status === 'pending').length, 0)), 'Waiting to be marked paid')}</div>
-    <section class="view-panel"><div class="view-panel-heading"><div><h2>Transaction history</h2><p id="transaction-result-count">${visible.length} records shown</p></div><span class="status-chip">Saved in this browser</span></div>
+    <div class="view-stat-grid">${statCard(`${monthLabel} spending`, money(monthlyTransactions().filter((tx) => tx.type === 'expense').reduce((sum, tx) => sum + tx.amount, 0)), 'Personal and group expenses')}${statCard(`${monthLabel} income`, money(monthlyTransactions().filter((tx) => tx.type === 'income').reduce((sum, tx) => sum + tx.amount, 0)), 'Income records this month')}${statCard('Open split shares', String(state.transactions.filter((tx) => !tx.deleted).reduce((sum, tx) => sum + tx.splits.filter((share) => share.status === 'pending').length, 0)), 'Waiting to be marked paid')}</div>
+    <section class="view-panel"><div class="view-panel-heading"><div><h2>Transaction history</h2><p id="transaction-result-count">${visible.length} records shown</p></div><span class="status-chip">Saved to your account</span></div>
       <div class="view-toolbar"><div class="filter-tabs" role="tablist" aria-label="Filter transactions">${[['all', 'All'], ['expense', 'Expenses'], ['income', 'Income'], ['archived', 'Archived']].map(([value, label]) => `<button class="filter-tab ${transactionFilter === value ? 'is-active' : ''}" type="button" role="tab" aria-selected="${transactionFilter === value}" data-action="transaction-filter" data-filter="${value}">${label}</button>`).join('')}</div>
         <input class="text-field search-field" id="transaction-search" type="search" placeholder="Search descriptions or groups" value="${escapeHtml(transactionSearch)}" aria-label="Search transactions" />
         <select class="text-field" id="transaction-category-filter" aria-label="Filter by category"><option value="all">All categories</option>${categories.map((category) => `<option value="${escapeHtml(category)}" ${transactionCategory === category ? 'selected' : ''}>${escapeHtml(category)}</option>`).join('')}</select>
-        <select class="text-field" id="transaction-period-filter" aria-label="Filter by date"><option value="month" ${transactionPeriod === 'month' ? 'selected' : ''}>October 2026</option><option value="all" ${transactionPeriod === 'all' ? 'selected' : ''}>All dates</option></select>
+        <select class="text-field" id="transaction-period-filter" aria-label="Filter by date"><option value="month" ${transactionPeriod === 'month' ? 'selected' : ''}>${escapeHtml(monthLabel)}</option><option value="all" ${transactionPeriod === 'all' ? 'selected' : ''}>All dates</option></select>
       </div>
       <div class="ledger-wrap"><div class="ledger-table" id="transaction-list"><div class="ledger-head"><span>TRANSACTION</span><span>CATEGORY</span><span>GROUP</span><span>DATE</span><span class="ledger-amount">AMOUNT</span><span></span></div><div id="transaction-rows">${transactionRowsMarkup(visible)}</div></div></div>
     </section>${pageFooter()}`;
@@ -343,7 +337,7 @@ function renderGroups() {
       <section class="view-panel"><div class="group-detail-top"><div class="group-detail-title">${groupIcon(group)}<div><h2>${escapeHtml(group.name)}</h2><p>${escapeHtml(group.description || 'A shared space for expenses and repayments.')}</p></div></div><div class="group-detail-actions">${actionButton('add-group-expense', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Add group expense', true, `data-group-id="${escapeHtml(group.id)}"`)}${actionButton('add-group-members', 'Manage members', false, `data-group-id="${escapeHtml(group.id)}"`)}</div></div>
         <div class="group-balance-strip"><span>Your current balance in this group</span><strong>${balance === 0 ? 'All settled' : signedMoney(balance)}</strong></div>
         <div class="view-panel-heading"><div><h2>Members <span class="muted-count">${String(group.memberIds.length).padStart(2, '0')}</span></h2><p>Only group members can be included in a split.</p></div></div><div class="member-list">${members}</div>
-        <div class="group-transactions"><div class="view-panel-heading"><div><h2>Recent group expenses</h2><p>${transactions.length} visible record${transactions.length === 1 ? '' : 's'} in this demo</p></div><button class="panel-link" type="button" data-view="transactions">View transaction history ↗</button></div>${recent}</div>
+        <div class="group-transactions"><div class="view-panel-heading"><div><h2>Recent group expenses</h2><p>${transactions.length} visible record${transactions.length === 1 ? '' : 's'} in this group</p></div><button class="panel-link" type="button" data-view="transactions">View transaction history ↗</button></div>${recent}</div>
       </section></div>${pageFooter()}`;
 }
 
@@ -391,10 +385,11 @@ function renderInsights() {
   const categoryRows = categories.map(([name, amount]) => `<div class="category-row"><span>${escapeHtml(name)}</span><span class="category-bar"><span style="width:${Math.max(3, amount / largest * 100)}%"></span></span><strong>${money(amount)}</strong></div>`).join('') || '<div class="empty-state">Add expenses to see your category breakdown.</div>';
   const recent = rows.slice().sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5).map((tx) => `<div class="history-row"><strong>${escapeHtml(tx.description)}</strong><span>${escapeHtml(tx.category)}</span><span>${escapeHtml(dateLabel(tx.date))}</span><strong class="${tx.type === 'income' ? 'amount-positive' : ''}">${tx.type === 'income' ? '+' : '−'}${money(tx.amount)}</strong></div>`).join('') || '<div class="empty-state">No report data for this period yet.</div>';
   const actions = '<button class="button button-secondary" type="button" data-action="export-report">Download CSV</button>';
+  const monthLabel = currentMonthLabel();
   return `${viewHeading('A CLEARER PICTURE', 'Insights', 'Understand where money goes and how shared costs are changing.', actions)}
-    <div class="view-stat-grid">${statCard('Income', money(income), `${rows.filter((tx) => tx.type === 'income').length} records in October`)}${statCard('Expenses', money(spend), `${expenses.length} records in October`)}${statCard('Remaining', money(income - spend), 'Income less recorded spending')}</div>
-    <div class="insights-grid"><section class="view-panel"><div class="view-panel-heading"><div><h2>Spending by category</h2><p>October 2026 <i>·</i> ${money(spend)} total</p></div><span class="status-chip">${categories.length} categories</span></div><div class="category-breakdown">${categoryRows}</div></section>
-      <section class="view-panel"><div class="view-panel-heading"><div><h2>Income and outflow</h2><p>Monthly comparison</p></div></div>${renderMonthlyBars(income, spend)}<p class="report-note">Numbers use the demo transactions currently saved in this browser.</p></section></div>
+    <div class="view-stat-grid">${statCard('Income', money(income), `${rows.filter((tx) => tx.type === 'income').length} records in ${monthLabel}`)}${statCard('Expenses', money(spend), `${expenses.length} records in ${monthLabel}`)}${statCard('Remaining', money(income - spend), 'Income less recorded spending')}</div>
+    <div class="insights-grid"><section class="view-panel"><div class="view-panel-heading"><div><h2>Spending by category</h2><p>${escapeHtml(monthLabel)} <i>·</i> ${money(spend)} total</p></div><span class="status-chip">${categories.length} categories</span></div><div class="category-breakdown">${categoryRows}</div></section>
+      <section class="view-panel"><div class="view-panel-heading"><div><h2>Income and outflow</h2><p>Monthly comparison</p></div></div>${renderMonthlyBars(income, spend)}<p class="report-note">Numbers use transaction records saved to your account.</p></section></div>
     <section class="view-panel" style="margin-top:13px"><div class="view-panel-heading"><div><h2>Recent records</h2><p>Included in this period's report.</p></div><button class="panel-link" type="button" data-view="transactions">Browse all transactions ↗</button></div>${recent}</section>${pageFooter()}`;
 }
 function renderMonthlyBars(income, spend) {
@@ -434,6 +429,14 @@ function populateTransactionOptions(groupId) {
   const paidBy = document.querySelector('#transaction-paid-by');
   paidBy.innerHTML = members.map((id) => `<option value="${escapeHtml(id)}">${id === me ? 'You' : escapeHtml(personName(id))}</option>`).join('');
 }
+function populateTransactionCategories(selected = '') {
+  const type = document.querySelector('#transaction-type').value;
+  const categorySelect = document.querySelector('#transaction-category');
+  const categories = type === 'income' ? ['Income'] : state.categories.filter((category) => category !== 'Income');
+  if (!categories.length) categories.push('Other');
+  categorySelect.innerHTML = categories.map((category) => `<option value="${escapeHtml(category)}">${escapeHtml(category)}</option>`).join('');
+  categorySelect.value = categories.includes(selected) ? selected : categories[0] || '';
+}
 function openTransactionDialog(options = {}) {
   editingTransactionId = options.transaction?.id || null;
   editingSplitSeed = options.transaction?.splits || null;
@@ -445,6 +448,7 @@ function openTransactionDialog(options = {}) {
   document.querySelector('#transaction-comment').value = tx?.comment || '';
   document.querySelector('#transaction-amount').value = tx?.amount ?? '';
   document.querySelector('#transaction-type').value = tx?.type || 'expense';
+  populateTransactionCategories(tx?.category || '');
   populateTransactionOptions(tx?.groupId || options.groupId || '');
   if (tx?.paidBy && document.querySelector(`#transaction-paid-by option[value="${CSS.escape(tx.paidBy)}"]`)) document.querySelector('#transaction-paid-by').value = tx.paidBy;
   updateSplitEditor();
@@ -456,11 +460,10 @@ function selectedSplitMembers() {
 }
 function currentShareAmounts(memberIds, total, mode) {
   if (mode === 'custom') {
-    return Object.fromEntries(memberIds.map((id) => [id, Number(document.querySelector(`[data-custom-share="${CSS.escape(id)}"]`)?.value || 0)]));
+    const shares = Object.fromEntries(memberIds.map((id) => [id, Number(document.querySelector(`[data-custom-share="${CSS.escape(id)}"]`)?.value || 0)]));
+    return window.FinTrackFinance.splitCustom(total, memberIds, shares);
   }
-  const share = Math.floor(total / Math.max(memberIds.length, 1));
-  let remainder = total - share * memberIds.length;
-  return Object.fromEntries(memberIds.map((id) => [id, share + (remainder-- > 0 ? 1 : 0)]));
+  return window.FinTrackFinance.splitEqual(total, memberIds);
 }
 function updateSplitEditor() {
   const editor = document.querySelector('#split-editor');
@@ -482,7 +485,7 @@ function updateSplitEditor() {
   const priorShares = Object.fromEntries((seed || []).map((share) => [share.userId, share.amount]));
   const ids = selectedSplitMembers();
   if (splitMode === 'custom') {
-    const values = currentShareAmounts(ids, total, 'equal');
+    const values = total > 0 ? currentShareAmounts(ids, total, 'equal') : {};
     ids.forEach((id) => { const input = document.querySelector(`[data-custom-share="${CSS.escape(id)}"]`); if (input) input.value = priorShares[id] ?? values[id] ?? 0; });
   }
   document.querySelector('#transaction-paid-by').disabled = false;
@@ -493,6 +496,7 @@ function renderSplitPreview() {
   if (!preview) return;
   const members = selectedSplitMembers();
   const amount = Number(document.querySelector('#transaction-amount').value) || 0;
+  if (!Number.isSafeInteger(amount) || amount <= 0) { preview.innerHTML = '<span class="amount-warning">Enter a positive whole amount.</span>'; return; }
   const mode = document.querySelector('#split-mode')?.value || 'equal';
   document.querySelectorAll('.custom-share').forEach((input) => { input.hidden = mode !== 'custom' || !members.includes(input.dataset.customShare); });
   if (!members.length) { preview.innerHTML = '<span class="amount-warning">Choose at least one member for this split.</span>'; return; }
@@ -501,7 +505,9 @@ function renderSplitPreview() {
     preview.innerHTML = `Each person is allocated <strong>${money(shares[members[0]])}</strong>${members.length > 1 ? ' (with any remainder assigned to the first person).' : '.'}`;
     return;
   }
-  const shares = currentShareAmounts(members, amount, mode);
+  let shares;
+  try { shares = currentShareAmounts(members, amount, mode); }
+  catch { preview.innerHTML = '<span class="amount-warning">Each custom share must be a positive whole amount.</span>'; return; }
   const allocated = Object.values(shares).reduce((sum, value) => sum + value, 0);
   const difference = amount - allocated;
   preview.innerHTML = `Allocated <strong>${money(allocated)}</strong> of ${money(amount)}. ${difference === 0 ? '<span class="split-valid">Amounts match.</span>' : `<span class="amount-warning">${difference > 0 ? `${money(difference)} left to allocate.` : `${money(Math.abs(difference))} over the total.`}</span>`}`;
@@ -551,47 +557,53 @@ function openTransactionDetails(id) {
 async function submitTransaction(event) {
   event.preventDefault();
   if (!transactionForm.reportValidity()) return;
-  const data = new FormData(transactionForm);
-  const amount = Number(data.get('amount'));
-  const type = String(data.get('type'));
-  const groupId = type === 'expense' ? String(data.get('group') || '') || null : null;
-  const group = getGroup(groupId);
-  const paidBy = String(data.get('paidBy') || me);
-  const old = state.transactions.find((item) => item.id === editingTransactionId);
-  let splits = [];
-  let splitMode = 'equal';
-  if (group) {
-    const memberIds = selectedSplitMembers();
-    if (!memberIds.length) { showToast('Choose at least one person for the group split.'); return; }
-    splitMode = document.querySelector('#split-mode').value;
-    const shares = currentShareAmounts(memberIds, amount, splitMode);
-    const allocated = Object.values(shares).reduce((sum, value) => sum + value, 0);
-    if (splitMode === 'custom' && allocated !== amount) { showToast('Custom shares must add up to the transaction amount.'); return; }
-    if (memberIds.some((id) => !Number.isInteger(shares[id]) || shares[id] <= 0)) { showToast('Each split share must be a positive whole amount.'); return; }
-    splits = memberIds.map((userId) => ({ userId, amount: shares[userId], status: userId === me ? 'paid' : 'pending' }));
-  }
-  if (paidBy !== me) { showToast('Only your own account can record a transaction as payer.'); return; }
-  const category = type === 'income' ? 'Income' : (old?.category || 'Other');
-  const result = await window.fintrackSupabase.rpc('save_fintrack_transaction', {
-    p_transaction_id: old?.id || null,
-    p_transaction_type: type === 'income' ? 'INCOME' : group ? 'GROUP_SPLIT' : 'PERSONAL_EXPENSE',
-    p_category_id: categoryIdsByName.get(category) || null,
-    p_split_group_id: groupId,
-    p_amount: amount,
-    p_currency_code: (state.profile.currency || 'INR').toUpperCase(),
-    p_description: String(data.get('description')).trim(),
-    p_transaction_date: old?.date || todayValue(),
-    p_splits: splits.map((share) => ({ user_id: share.userId, amount_owed: share.amount, status: share.userId === me ? 'settled' : 'outstanding' })),
+  await submitFormOnce(transactionForm, async () => {
+    const data = new FormData(transactionForm);
+    const amount = window.FinTrackFinance.assertAmount(data.get('amount'));
+    const type = String(data.get('type'));
+    const groupId = type === 'expense' ? String(data.get('group') || '') || null : null;
+    const group = getGroup(groupId);
+    const paidBy = String(data.get('paidBy') || me);
+    const old = state.transactions.find((item) => item.id === editingTransactionId);
+    let splits = [];
+    let splitMode = 'equal';
+    if (group) {
+      const memberIds = selectedSplitMembers();
+      if (!memberIds.length) { showToast('Choose at least one person for the group split.'); return; }
+      splitMode = document.querySelector('#split-mode').value;
+      const shares = currentShareAmounts(memberIds, amount, splitMode);
+      splits = memberIds.map((userId) => ({ userId, amount: shares[userId], status: userId === me ? 'paid' : 'pending' }));
+    }
+    if (paidBy !== me) { showToast('Only your own account can record a transaction as payer.'); return; }
+    const category = type === 'income' ? 'Income' : String(data.get('category') || 'Other');
+    const transactionDate = old?.date || todayValue();
+    const result = await window.fintrackSupabase.rpc('save_fintrack_transaction', {
+      p_transaction_id: old?.id || null,
+      p_transaction_type: type === 'income' ? 'INCOME' : group ? 'GROUP_SPLIT' : 'PERSONAL_EXPENSE',
+      p_category_id: categoryIdsByName.get(category) || null,
+      p_split_group_id: groupId,
+      p_amount: amount,
+      p_currency_code: (state.profile.currency || 'INR').toUpperCase(),
+      p_description: String(data.get('description')).trim(),
+      p_transaction_date: transactionDate,
+      p_splits: splits.map((share) => ({ user_id: share.userId, amount_owed: share.amount, status: share.userId === me ? 'settled' : 'outstanding' })),
+    });
+    if (result.error) { showToast(`Could not save transaction: ${result.error.message}`); return; }
+    const tx = { id: result.data, description: String(data.get('description')).trim(), comment: old?.comment || '', amount, type, category, groupId, date: transactionDate, paidBy: me, splitMode, splits, deleted: false, includeInBalances: Boolean(group) };
+    if (old) state.transactions[state.transactions.findIndex((item) => item.id === old.id)] = tx;
+    else state.transactions.unshift(tx);
+    editingTransactionId = tx.id;
+    const comment = String(data.get('comment') || '').trim();
+    const commentResult = await window.fintrackSupabase.from('transactions').update({ comment }).eq('transaction_id', result.data).select('transaction_id').maybeSingle();
+    if (commentResult.error) {
+      refreshAfterChange();
+      showToast(`Transaction saved, but its comment could not be saved. Your form is still open; retry to finish saving: ${commentResult.error.message}`);
+      return;
+    }
+    tx.comment = comment;
+    saveState(); closeDialog(transactionDialog); editingTransactionId = null; editingSplitSeed = null; transactionForm.reset(); refreshAfterChange();
+    showToast(old ? 'Transaction updated in Supabase.' : `${type === 'income' ? 'Income' : 'Expense'} saved to Supabase.`);
   });
-  if (result.error) { showToast(`Could not save transaction: ${result.error.message}`); return; }
-  const comment = String(data.get('comment') || '').trim();
-  const commentResult = await window.fintrackSupabase.from('transactions').update({ comment }).eq('transaction_id', result.data).select('transaction_id').maybeSingle();
-  if (commentResult.error) { showToast(`Transaction saved, but its comment could not be saved: ${commentResult.error.message}`); return; }
-  const tx = { id: result.data, description: String(data.get('description')).trim(), comment, amount, type, category, groupId, date: old?.date || todayValue(), paidBy: me, splitMode, splits, deleted: false, includeInBalances: Boolean(group) };
-  if (old) state.transactions[state.transactions.findIndex((item) => item.id === old.id)] = tx;
-  else state.transactions.unshift(tx);
-  saveState(); closeDialog(transactionDialog); editingTransactionId = null; editingSplitSeed = null; transactionForm.reset(); refreshAfterChange();
-  showToast(old ? 'Transaction updated in Supabase.' : `${type === 'income' ? 'Income' : 'Expense'} saved to Supabase.`);
 }
 
 function refreshAfterChange() {
@@ -603,14 +615,16 @@ async function createGroup(event) {
   event.preventDefault();
   const form = document.querySelector('#group-form');
   if (!form.reportValidity()) return;
-  const data = new FormData(form);
-  const memberIds = [...new Set([me, ...data.getAll('member').map(String)])];
-  const name = String(data.get('name')).trim();
-  const description = String(data.get('description')).trim();
-  const result = await window.fintrackSupabase.rpc('create_fintrack_group', { p_group_name: name, p_description: description, p_member_user_ids: memberIds });
-  if (result.error) { showToast(`Could not create group: ${result.error.message}`); return; }
-  const group = { id: result.data, name, description, icon: String(data.get('icon')), memberIds, baseBalance: 0, baseExpenseCount: 0, createdAt: todayValue() };
-  state.groups.unshift(group); selectedGroupId = group.id; saveState(); closeDialog(groupDialog); showView('groups'); showToast(`${group.name} was saved to Supabase.`);
+  await submitFormOnce(form, async () => {
+    const data = new FormData(form);
+    const memberIds = [...new Set([me, ...data.getAll('member').map(String)])];
+    const name = String(data.get('name')).trim();
+    const description = String(data.get('description')).trim();
+    const result = await window.fintrackSupabase.rpc('create_fintrack_group', { p_group_name: name, p_description: description, p_member_user_ids: memberIds });
+    if (result.error) { showToast(`Could not create group: ${result.error.message}`); return; }
+    const group = { id: result.data, name, description, icon: String(data.get('icon')), memberIds, baseBalance: 0, baseExpenseCount: 0, createdAt: todayValue() };
+    state.groups.unshift(group); selectedGroupId = group.id; saveState(); closeDialog(groupDialog); showView('groups'); showToast(`${group.name} was saved to Supabase.`);
+  });
 }
 
 let friendSearchMatch = null;
@@ -651,22 +665,24 @@ async function recordSettlement(event) {
   event.preventDefault();
   const form = document.querySelector('#settlement-form');
   if (!form.reportValidity()) return;
-  const data = new FormData(form);
-  const friend = getFriend(String(data.get('person')));
-  if (!friend) { showToast('Choose a saved friend.'); return; }
-  const direction = String(data.get('direction'));
-  const groupId = String(data.get('group') || '') || null;
-  const amount = Number(data.get('amount'));
-  const method = String(data.get('method'));
-  const date = String(data.get('date'));
-  const result = await window.fintrackSupabase.rpc('record_fintrack_settlement', {
-    p_counterparty_user_id: friend.id, p_direction: direction, p_split_group_id: groupId,
-    p_amount: amount, p_currency_code: (state.profile.currency || 'INR').toUpperCase(),
-    p_payment_method: method, p_settled_at: date,
+  await submitFormOnce(form, async () => {
+    const data = new FormData(form);
+    const friend = getFriend(String(data.get('person')));
+    if (!friend) { showToast('Choose a saved friend.'); return; }
+    const direction = String(data.get('direction'));
+    const groupId = String(data.get('group') || '') || null;
+    const amount = window.FinTrackFinance.assertAmount(data.get('amount'));
+    const method = String(data.get('method'));
+    const date = String(data.get('date'));
+    const result = await window.fintrackSupabase.rpc('record_fintrack_settlement', {
+      p_counterparty_user_id: friend.id, p_direction: direction, p_split_group_id: groupId,
+      p_amount: amount, p_currency_code: (state.profile.currency || 'INR').toUpperCase(),
+      p_payment_method: method, p_settled_at: date,
+    });
+    if (result.error) { showToast(`Could not save settlement: ${result.error.message}`); return; }
+    state.settlements.unshift({ id: result.data, personId: friend.id, person: friend.name, direction, amount, method, groupId, date, includeInBalances: true });
+    saveState(); closeDialog(settlementDialog); form.reset(); refreshAfterChange(); showToast('Settlement saved to Supabase. No money was moved.');
   });
-  if (result.error) { showToast(`Could not save settlement: ${result.error.message}`); return; }
-  state.settlements.unshift({ id: result.data, personId: friend.id, person: friend.name, direction, amount, method, groupId, date, includeInBalances: true });
-  saveState(); closeDialog(settlementDialog); form.reset(); refreshAfterChange(); showToast('Settlement saved to Supabase. No money was moved.');
 }
 
 async function acceptRequest(id) {
@@ -689,45 +705,63 @@ async function markSharePaid(transactionId, userId) {
   const tx = state.transactions.find((item) => item.id === transactionId);
   const share = tx?.splits.find((item) => item.userId === userId);
   if (!tx || !share || share.status === 'paid') return;
-  const { error } = await window.fintrackSupabase.from('expense_splits').update({ status: 'settled' }).eq('transaction_id', transactionId).eq('user_id', userId);
-  if (error) { showToast(`Could not update split: ${error.message}`); return; }
-  if (userId !== me && tx.paidBy === me) {
-    const result = await window.fintrackSupabase.rpc('record_fintrack_settlement', { p_counterparty_user_id: userId, p_direction: 'received', p_split_group_id: tx.groupId, p_amount: share.amount, p_currency_code: (state.profile.currency || 'INR').toUpperCase(), p_payment_method: 'Recorded split', p_settled_at: todayValue() });
-    if (result.error) showToast(`Split updated, but settlement history failed: ${result.error.message}`);
-    else state.settlements.unshift({ id: result.data, personId: userId, person: personName(userId), direction: 'received', amount: share.amount, method: 'Recorded split', groupId: tx.groupId, date: todayValue(), includeInBalances: true });
+  const key = `${transactionId}:${userId}`;
+  if (pendingSplitPayments.has(key)) return;
+  pendingSplitPayments.add(key);
+  try {
+    const { error } = await window.fintrackSupabase.from('expense_splits').update({ status: 'settled' }).eq('transaction_id', transactionId).eq('user_id', userId);
+    if (error) { showToast(`Could not update split: ${error.message}`); return; }
+    share.status = 'paid';
+    if (userId !== me && tx.paidBy === me) {
+      const result = await window.fintrackSupabase.rpc('record_fintrack_settlement', { p_counterparty_user_id: userId, p_direction: 'received', p_split_group_id: tx.groupId, p_amount: share.amount, p_currency_code: (state.profile.currency || 'INR').toUpperCase(), p_payment_method: 'Recorded split', p_settled_at: todayValue() });
+      if (result.error) {
+        saveState(); closeDialog(detailDialog); refreshAfterChange();
+        showToast(`Split status was updated, but the settlement record failed. Balances may be incorrect until it is recorded: ${result.error.message}`);
+        return;
+      }
+      state.settlements.unshift({ id: result.data, personId: userId, person: personName(userId), direction: 'received', amount: share.amount, method: 'Recorded split', groupId: tx.groupId, date: todayValue(), includeInBalances: true });
+    }
+    saveState(); closeDialog(detailDialog); refreshAfterChange(); showToast('Split payment updated in Supabase.');
+  } catch (error) {
+    showToast(`Could not finish updating the split. Check the saved records before retrying: ${error.message || 'Request failed.'}`);
+  } finally {
+    pendingSplitPayments.delete(key);
   }
-  share.status = 'paid'; saveState(); closeDialog(detailDialog); refreshAfterChange(); showToast('Split payment updated in Supabase.');
 }
 
 async function editProfile(event) {
   event.preventDefault();
   const form = document.querySelector('#profile-form');
   if (!form.reportValidity()) return;
-  const data = new FormData(form);
-  const name = String(data.get('name')).trim();
-  const mobile = String(data.get('mobile')).trim();
-  const { error } = await window.fintrackSupabase.from('users').update({ full_name: name, mobile_number: mobile || null, preferred_currency: String(data.get('currency')) }).eq('user_id', me);
-  if (error) { showToast(`Could not save profile: ${error.message}`); return; }
-  state.profile = { ...state.profile, name, mobile, currency: String(data.get('currency')) };
-  saveState();
-  document.querySelector('.profile-copy strong').textContent = name;
-  document.querySelector('.profile-button').setAttribute('aria-label', `Account for ${name}`);
-  document.querySelectorAll('.avatar-you').forEach((avatar) => { avatar.textContent = name.split(/\s+/).slice(0, 2).map((part) => part[0] || '').join('').toUpperCase(); });
-  const greeting = document.querySelector('#greeting');
-  if (greeting) greeting.innerHTML = `Good morning, ${escapeHtml(name.split(/\s+/)[0])}<span class="heading-period">.</span>`;
-  updateOverview(); showToast('Profile saved to Supabase.');
+  await submitFormOnce(form, async () => {
+    const data = new FormData(form);
+    const name = String(data.get('name')).trim();
+    const mobile = String(data.get('mobile')).trim();
+    const { error } = await window.fintrackSupabase.from('users').update({ full_name: name, mobile_number: mobile || null, preferred_currency: String(data.get('currency')) }).eq('user_id', me);
+    if (error) { showToast(`Could not save profile: ${error.message}`); return; }
+    state.profile = { ...state.profile, name, mobile, currency: String(data.get('currency')) };
+    saveState();
+    document.querySelector('.profile-copy strong').textContent = name;
+    document.querySelector('.profile-button').setAttribute('aria-label', `Account for ${name}`);
+    document.querySelectorAll('.avatar-you').forEach((avatar) => { avatar.textContent = name.split(/\s+/).slice(0, 2).map((part) => part[0] || '').join('').toUpperCase(); });
+    const greeting = document.querySelector('#greeting');
+    if (greeting) greeting.innerHTML = `Good morning, ${escapeHtml(name.split(/\s+/)[0])}<span class="heading-period">.</span>`;
+    updateOverview(); showToast('Profile saved to Supabase.');
+  });
 }
 
 async function addCategory(event) {
   event.preventDefault();
   const form = document.querySelector('#category-form');
   if (!form.reportValidity()) return;
-  const name = String(new FormData(form).get('category')).trim();
-  if (state.categories.some((category) => category.toLowerCase() === name.toLowerCase())) { showToast('That category already exists.'); return; }
-  const { data, error } = await window.fintrackSupabase.from('categories').insert({ category_name: name, category_type: 'both', created_by_user_id: me }).select('category_id,category_name').single();
-  if (error) { showToast(`Could not add category: ${error.message}`); return; }
-  state.categories.push(data.category_name); categoryIdsByName.set(data.category_name, data.category_id);
-  saveState(); renderCurrentView(); showToast(`${name} category saved to Supabase.`);
+  await submitFormOnce(form, async () => {
+    const name = String(new FormData(form).get('category')).trim();
+    if (state.categories.some((category) => category.toLowerCase() === name.toLowerCase())) { showToast('That category already exists.'); return; }
+    const { data, error } = await window.fintrackSupabase.from('categories').insert({ category_name: name, category_type: 'both', created_by_user_id: me }).select('category_id,category_name').single();
+    if (error) { showToast(`Could not add category: ${error.message}`); return; }
+    state.categories.push(data.category_name); categoryIdsByName.set(data.category_name, data.category_id);
+    saveState(); renderCurrentView(); showToast(`${name} category saved to Supabase.`);
+  });
 }
 
 function exportReport() {
@@ -815,10 +849,6 @@ function handleAction(action, element) {
   }
   if (action === 'delete-category') { const used = state.transactions.some((tx) => tx.category === id); if (used) { showToast('This category is used by a transaction and cannot be removed yet.'); return; } void deleteFinTrackCategory(id); return; }
   if (action === 'export-report') exportReport();
-  if (action === 'reset-demo') {
-    if (!window.confirm('Reset all local demo changes and restore the sample workspace?')) return;
-    localStorage.removeItem(storageKey); state = structuredClone(initialState); transactionFilter = 'all'; transactionSearch = ''; transactionCategory = 'all'; selectedGroupId = state.groups[0].id; showView('overview'); showToast('Demo data restored.');
-  }
 }
 
 document.addEventListener('click', (event) => {
@@ -855,9 +885,11 @@ document.querySelector('#member-form').addEventListener('submit', async (event) 
   const form = event.currentTarget; const group = getGroup(form.dataset.groupId);
   const members = new FormData(form).getAll('member').map(String).filter((id) => !group?.memberIds.includes(id));
   if (!group || !members.length) { closeDialog(memberDialog); return; }
-  const { error } = await window.fintrackSupabase.from('split_group_members').insert(members.map((user_id) => ({ split_group_id: group.id, user_id })));
-  if (error) { showToast(`Could not add group members: ${error.message}`); return; }
-  group.memberIds.push(...members); saveState(); closeDialog(memberDialog); refreshAfterChange(); showToast('Group members saved to Supabase.');
+  await submitFormOnce(form, async () => {
+    const { error } = await window.fintrackSupabase.from('split_group_members').insert(members.map((user_id) => ({ split_group_id: group.id, user_id })));
+    if (error) { showToast(`Could not add group members: ${error.message}`); return; }
+    group.memberIds.push(...members); saveState(); closeDialog(memberDialog); refreshAfterChange(); showToast('Group members saved to Supabase.');
+  });
 });
 
 document.addEventListener('submit', (event) => {
@@ -874,7 +906,7 @@ document.addEventListener('change', (event) => {
   if (event.target.id === 'transaction-category-filter') { transactionCategory = event.target.value; renderTransactionRows(); }
   if (event.target.id === 'transaction-period-filter') { transactionPeriod = event.target.value; renderTransactionRows(); }
   if (event.target.id === 'transaction-group') { editingSplitSeed = null; populateTransactionOptions(event.target.value); updateSplitEditor(); }
-  if (event.target.id === 'transaction-type') updateSplitEditor();
+  if (event.target.id === 'transaction-type') { populateTransactionCategories(); updateSplitEditor(); }
   if (event.target.id === 'split-mode') renderSplitPreview();
   if (event.target.matches('#split-editor input[data-split-user]')) renderSplitPreview();
   if (event.target.id === 'transaction-amount') renderSplitPreview();
@@ -892,6 +924,7 @@ async function initializeFinTrackFromSupabase(user) {
     db.from('settlements').select('*').order('settled_at',{ascending:false}),
   ]);
   for (const r of [pr,cr,mr,fr,tr,sr]) if(r.error) throw r.error;
+  if (!pr.data) throw new Error('Your profile record is unavailable, so the account workspace was not opened.');
   const gids=[...new Set((mr.data||[]).map(x=>x.split_group_id))];
   const [gr, gm, sp] = await Promise.all([
     gids.length?db.from('split_groups').select('split_group_id,group_name,description,created_at').in('split_group_id',gids):Promise.resolve({data:[],error:null}),
@@ -912,7 +945,7 @@ async function initializeFinTrackFromSupabase(user) {
   state.friendRequests=(fr.data||[]).filter(x=>x.status==='pending').map(x=>{const id=x.user_id_1===user.id?x.user_id_2:x.user_id_1,p=people.get(id)||{};return{id,name:p.full_name||p.email_id||'FinTrack member',contact:p.email_id||'',direction:x.action_user_id===user.id?'outgoing':'incoming',createdAt:x.established_at?.slice(0,10)||todayValue()}});
   const cats=new Map((cr.data||[]).map(x=>[x.category_id,x.category_name])), splits=new Map(); (sp.data||[]).forEach(x=>{const a=splits.get(x.transaction_id)||[];a.push({userId:x.user_id,amount:Number(x.amount_owed),status:x.status==='settled'?'paid':'pending'});splits.set(x.transaction_id,a)});
   state.transactions=(tr.data||[]).map(x=>({id:x.transaction_id,description:x.description||'',comment:x.comment||'',amount:Number(x.amount),type:x.transaction_type==='INCOME'?'income':'expense',category:cats.get(x.category_id)||'Other',groupId:x.split_group_id,date:x.transaction_date.slice(0,10),paidBy:x.user_id,splitMode:'equal',splits:splits.get(x.transaction_id)||[],deleted:Boolean(x.is_deleted),includeInBalances:Boolean(x.split_group_id)}));
-  state.settlements=(sr.data||[]).map(x=>{const id=x.payer_user_id===user.id?x.payee_user_id:x.payer_user_id;return{id:x.settlement_id,personId:id,person:people.get(id)?.full_name||'FinTrack member',direction:x.payer_user_id===user.id?'sent':'received',amount:Number(x.amount),method:x.payment_method||'',groupId:x.split_group_id,date:x.settled_at.slice(0,10),includeInBalances:false}});
+  state.settlements=(sr.data||[]).map(x=>{const id=x.payer_user_id===user.id?x.payee_user_id:x.payer_user_id;return{id:x.settlement_id,personId:id,person:people.get(id)?.full_name||'FinTrack member',direction:x.payer_user_id===user.id?'sent':'received',amount:Number(x.amount),method:x.payment_method||'',groupId:x.split_group_id,date:x.settled_at.slice(0,10),includeInBalances:true}});
   selectedGroupId=state.groups[0]?.id||null; syncProfileIdentity(); updateOverview(); if(currentView!=='overview') renderCurrentView();
 }
 window.initializeFinTrackFromSupabase=initializeFinTrackFromSupabase;
