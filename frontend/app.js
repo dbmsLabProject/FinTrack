@@ -915,38 +915,251 @@ document.querySelectorAll('.modal').forEach((dialog) => dialog.addEventListener(
 
 async function initializeFinTrackFromSupabase(user) {
   const db = window.fintrackSupabase;
+
   const [pr, cr, mr, fr, tr, sr] = await Promise.all([
-    db.from('users').select('user_id,full_name,email_id,mobile_number,preferred_currency').eq('user_id',user.id).maybeSingle(),
-    db.from('categories').select('category_id,category_name,category_type'),
-    db.from('split_group_members').select('split_group_id,user_id').eq('user_id',user.id),
-    db.from('friendships').select('user_id_1,user_id_2,status,action_user_id,established_at').or(`user_id_1.eq.${user.id},user_id_2.eq.${user.id}`),
-    db.from('transactions').select('*').order('transaction_date',{ascending:false}),
-    db.from('settlements').select('*').order('settled_at',{ascending:false}),
+    db.from('users')
+      .select('user_id,full_name,email_id,mobile_number,preferred_currency')
+      .eq('user_id', user.id)
+      .maybeSingle(),
+
+    db.from('categories')
+      .select('category_id,category_name,category_type'),
+
+    db.from('split_group_members')
+      .select('split_group_id,user_id')
+      .eq('user_id', user.id),
+
+    db.from('friendships')
+      .select('user_id_1,user_id_2,status,action_user_id,established_at')
+      .or(`user_id_1.eq.${user.id},user_id_2.eq.${user.id}`),
+
+    db.from('transactions')
+      .select('*')
+      .order('transaction_date', { ascending: false }),
+
+    // Only retrieve settlements involving the logged-in user.
+    db.from('settlements')
+      .select('*')
+      .or(`payer_user_id.eq.${user.id},payee_user_id.eq.${user.id}`)
+      .order('settled_at', { ascending: false }),
   ]);
-  for (const r of [pr,cr,mr,fr,tr,sr]) if(r.error) throw r.error;
-  if (!pr.data) throw new Error('Your profile record is unavailable, so the account workspace was not opened.');
-  const gids=[...new Set((mr.data||[]).map(x=>x.split_group_id))];
+
+  for (const r of [pr, cr, mr, fr, tr, sr]) {
+    if (r.error) throw r.error;
+  }
+
+  if (!pr.data) {
+    throw new Error(
+      'Your profile record is unavailable, so the account workspace was not opened.'
+    );
+  }
+
+  const gids = [
+    ...new Set((mr.data || []).map(x => x.split_group_id))
+  ];
+
   const [gr, gm, sp] = await Promise.all([
-    gids.length?db.from('split_groups').select('split_group_id,group_name,description,created_at').in('split_group_id',gids):Promise.resolve({data:[],error:null}),
-    gids.length?db.from('split_group_members').select('split_group_id,user_id').in('split_group_id',gids):Promise.resolve({data:[],error:null}),
-    tr.data.length?db.from('expense_splits').select('transaction_id,user_id,amount_owed,status').in('transaction_id',tr.data.map(x=>x.transaction_id)):Promise.resolve({data:[],error:null}),
+    gids.length
+      ? db.from('split_groups')
+          .select('split_group_id,group_name,description,created_at')
+          .in('split_group_id', gids)
+      : Promise.resolve({ data: [], error: null }),
+
+    gids.length
+      ? db.from('split_group_members')
+          .select('split_group_id,user_id')
+          .in('split_group_id', gids)
+      : Promise.resolve({ data: [], error: null }),
+
+    tr.data.length
+      ? db.from('expense_splits')
+          .select('transaction_id,user_id,amount_owed,status')
+          .in('transaction_id', tr.data.map(x => x.transaction_id))
+      : Promise.resolve({ data: [], error: null }),
   ]);
-  for(const r of [gr,gm,sp]) if(r.error) throw r.error;
-  const ids=new Set([user.id]); (fr.data||[]).forEach(x=>{ids.add(x.user_id_1);ids.add(x.user_id_2)}); (gm.data||[]).forEach(x=>ids.add(x.user_id)); (sp.data||[]).forEach(x=>ids.add(x.user_id)); (sr.data||[]).forEach(x=>{ids.add(x.payer_user_id);ids.add(x.payee_user_id)});
-  const ur=await db.from('users').select('user_id,full_name,email_id,mobile_number,preferred_currency').in('user_id',[...ids]); if(ur.error) throw ur.error;
-  const connectionsResult = await db.rpc('list_fintrack_connections'); if (connectionsResult.error) throw connectionsResult.error;
-  const people=new Map((ur.data||[]).map(x=>[x.user_id,x]));
-  (connectionsResult.data||[]).forEach(x=>people.set(x.other_user_id,{user_id:x.other_user_id,full_name:x.full_name,email_id:x.email_id}));
-  const profile=pr.data||{}; me=user.id;
-  state=structuredClone(initialState); state.profile={name:profile.full_name||user.user_metadata?.full_name||'',email:profile.email_id||user.email||'',mobile:profile.mobile_number||'',currency:profile.preferred_currency||'INR'}; state.providers={}; state.baseFriendBalances={};
-  state.categories=(cr.data||[]).map(x=>x.category_name); categoryIdsByName=new Map((cr.data||[]).map(x=>[x.category_name,x.category_id]));
-  state.groups=(gr.data||[]).map(x=>({id:x.split_group_id,name:x.group_name,description:x.description||'',icon:'travel',memberIds:(gm.data||[]).filter(m=>m.split_group_id===x.split_group_id).map(m=>m.user_id),baseBalance:0,baseExpenseCount:0,createdAt:x.created_at?.slice(0,10)||todayValue()}));
-  state.friends=(fr.data||[]).map(x=>{const id=x.user_id_1===user.id?x.user_id_2:x.user_id_1,p=people.get(id)||{};return{id,name:p.full_name||p.email_id||'FinTrack member',contact:p.email_id||p.mobile_number||'',status:x.status==='blocked'?'blocked':x.status==='accepted'?'accepted':'pending'}});
-  state.friendRequests=(fr.data||[]).filter(x=>x.status==='pending').map(x=>{const id=x.user_id_1===user.id?x.user_id_2:x.user_id_1,p=people.get(id)||{};return{id,name:p.full_name||p.email_id||'FinTrack member',contact:p.email_id||'',direction:x.action_user_id===user.id?'outgoing':'incoming',createdAt:x.established_at?.slice(0,10)||todayValue()}});
-  const cats=new Map((cr.data||[]).map(x=>[x.category_id,x.category_name])), splits=new Map(); (sp.data||[]).forEach(x=>{const a=splits.get(x.transaction_id)||[];a.push({userId:x.user_id,amount:Number(x.amount_owed),status:x.status==='settled'?'paid':'pending'});splits.set(x.transaction_id,a)});
-  state.transactions=(tr.data||[]).map(x=>({id:x.transaction_id,description:x.description||'',comment:x.comment||'',amount:Number(x.amount),type:x.transaction_type==='INCOME'?'income':'expense',category:cats.get(x.category_id)||'Other',groupId:x.split_group_id,date:x.transaction_date.slice(0,10),paidBy:x.user_id,splitMode:'equal',splits:splits.get(x.transaction_id)||[],deleted:Boolean(x.is_deleted),includeInBalances:Boolean(x.split_group_id)}));
-  state.settlements=(sr.data||[]).map(x=>{const id=x.payer_user_id===user.id?x.payee_user_id:x.payer_user_id;return{id:x.settlement_id,personId:id,person:people.get(id)?.full_name||'FinTrack member',direction:x.payer_user_id===user.id?'sent':'received',amount:Number(x.amount),method:x.payment_method||'',groupId:x.split_group_id,date:x.settled_at.slice(0,10),includeInBalances:true}});
-  selectedGroupId=state.groups[0]?.id||null; syncProfileIdentity(); updateOverview(); if(currentView!=='overview') renderCurrentView();
+
+  for (const r of [gr, gm, sp]) {
+    if (r.error) throw r.error;
+  }
+
+  const ids = new Set([user.id]);
+
+  (fr.data || []).forEach(x => {
+    ids.add(x.user_id_1);
+    ids.add(x.user_id_2);
+  });
+
+  (gm.data || []).forEach(x => ids.add(x.user_id));
+  (sp.data || []).forEach(x => ids.add(x.user_id));
+
+  (sr.data || []).forEach(x => {
+    ids.add(x.payer_user_id);
+    ids.add(x.payee_user_id);
+  });
+
+  const ur = await db.from('users')
+    .select('user_id,full_name,email_id,mobile_number,preferred_currency')
+    .in('user_id', [...ids]);
+
+  if (ur.error) throw ur.error;
+
+  const connectionsResult = await db.rpc('list_fintrack_connections');
+
+  if (connectionsResult.error) throw connectionsResult.error;
+
+  const people = new Map(
+    (ur.data || []).map(x => [x.user_id, x])
+  );
+
+  (connectionsResult.data || []).forEach(x => {
+    people.set(x.other_user_id, {
+      user_id: x.other_user_id,
+      full_name: x.full_name,
+      email_id: x.email_id
+    });
+  });
+
+  const profile = pr.data;
+
+  me = user.id;
+
+  state = structuredClone(initialState);
+
+  state.profile = {
+    name: profile.full_name || user.user_metadata?.full_name || '',
+    email: profile.email_id || user.email || '',
+    mobile: profile.mobile_number || '',
+    currency: profile.preferred_currency || 'INR'
+  };
+
+  state.providers = {};
+  state.baseFriendBalances = {};
+
+  state.categories = (cr.data || []).map(x => x.category_name);
+
+  categoryIdsByName = new Map(
+    (cr.data || []).map(x => [x.category_name, x.category_id])
+  );
+
+  state.groups = (gr.data || []).map(x => ({
+    id: x.split_group_id,
+    name: x.group_name,
+    description: x.description || '',
+    icon: 'travel',
+    memberIds: (gm.data || [])
+      .filter(m => m.split_group_id === x.split_group_id)
+      .map(m => m.user_id),
+    baseBalance: 0,
+    baseExpenseCount: 0,
+    createdAt: x.created_at?.slice(0, 10) || todayValue()
+  }));
+
+  state.friends = (fr.data || []).map(x => {
+    const id = x.user_id_1 === user.id
+      ? x.user_id_2
+      : x.user_id_1;
+
+    const p = people.get(id) || {};
+
+    return {
+      id,
+      name: p.full_name || p.email_id || 'FinTrack member',
+      contact: p.email_id || p.mobile_number || '',
+      status: x.status === 'blocked'
+        ? 'blocked'
+        : x.status === 'accepted'
+          ? 'accepted'
+          : 'pending'
+    };
+  });
+
+  state.friendRequests = (fr.data || [])
+    .filter(x => x.status === 'pending')
+    .map(x => {
+      const id = x.user_id_1 === user.id
+        ? x.user_id_2
+        : x.user_id_1;
+
+      const p = people.get(id) || {};
+
+      return {
+        id,
+        name: p.full_name || p.email_id || 'FinTrack member',
+        contact: p.email_id || '',
+        direction: x.action_user_id === user.id
+          ? 'outgoing'
+          : 'incoming',
+        createdAt: x.established_at?.slice(0, 10) || todayValue()
+      };
+    });
+
+  const cats = new Map(
+    (cr.data || []).map(x => [x.category_id, x.category_name])
+  );
+
+  const splits = new Map();
+
+  (sp.data || []).forEach(x => {
+    const a = splits.get(x.transaction_id) || [];
+
+    a.push({
+      userId: x.user_id,
+      amount: Number(x.amount_owed),
+      status: x.status === 'settled' ? 'paid' : 'pending'
+    });
+
+    splits.set(x.transaction_id, a);
+  });
+
+  state.transactions = (tr.data || []).map(x => ({
+    id: x.transaction_id,
+    description: x.description || '',
+    comment: x.comment || '',
+    amount: Number(x.amount),
+    type: x.transaction_type === 'INCOME' ? 'income' : 'expense',
+    category: cats.get(x.category_id) || 'Other',
+    groupId: x.split_group_id,
+    date: x.transaction_date.slice(0, 10),
+    paidBy: x.user_id,
+    splitMode: 'equal',
+    splits: splits.get(x.transaction_id) || [],
+    deleted: Boolean(x.is_deleted),
+    includeInBalances: Boolean(x.split_group_id)
+  }));
+
+  // Defensive check: a settlement must involve the current user
+  // before it can affect their friend and group balances.
+  state.settlements = (sr.data || [])
+    .filter(x =>
+      x.payer_user_id === user.id ||
+      x.payee_user_id === user.id
+    )
+    .map(x => {
+      const sentByMe = x.payer_user_id === user.id;
+
+      const personId = sentByMe
+        ? x.payee_user_id
+        : x.payer_user_id;
+
+      return {
+        id: x.settlement_id,
+        personId,
+        person: people.get(personId)?.full_name || 'FinTrack member',
+        direction: sentByMe ? 'sent' : 'received',
+        amount: Number(x.amount),
+        method: x.payment_method || '',
+        groupId: x.split_group_id,
+        date: x.settled_at.slice(0, 10),
+        includeInBalances: true
+      };
+    });
+
+  selectedGroupId = state.groups[0]?.id || null;
+
+  syncProfileIdentity();
+  updateOverview();
+
+  if (currentView !== 'overview') {
+    renderCurrentView();
+  }
 }
-window.initializeFinTrackFromSupabase=initializeFinTrackFromSupabase;
-/* Waiting for Supabase authentication before rendering account data. */
